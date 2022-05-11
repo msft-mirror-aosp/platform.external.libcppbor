@@ -16,6 +16,7 @@
 
 #include "cppbor_parse.h"
 
+#include <sstream>
 #include <stack>
 
 #ifndef __TRUSTY__
@@ -96,7 +97,8 @@ std::tuple<const uint8_t*, ParseClient*> handleString(uint64_t length, const uin
                                                       const uint8_t* valueBegin, const uint8_t* end,
                                                       const std::string& errLabel,
                                                       ParseClient* parseClient) {
-    if (end - valueBegin < static_cast<ssize_t>(length)) {
+    ssize_t signed_length = static_cast<ssize_t>(length);
+    if (end - valueBegin < signed_length || signed_length < 0) {
         parseClient->error(hdrBegin, insufficientLengthString(length, end - valueBegin, errLabel));
         return {hdrBegin, nullptr /* end parsing */};
     }
@@ -194,6 +196,13 @@ std::tuple<const uint8_t*, ParseClient*> handleCompound(
 
 std::tuple<const uint8_t*, ParseClient*> parseRecursively(const uint8_t* begin, const uint8_t* end,
                                                           bool emitViews, ParseClient* parseClient) {
+    if (begin == end) {
+        parseClient->error(
+                begin,
+                "Input buffer is empty. Begin and end cannot point to the same location.");
+        return {begin, nullptr};
+    }
+
     const uint8_t* pos = begin;
 
     MajorType type = static_cast<MajorType>(*pos & 0xE0);
