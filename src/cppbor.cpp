@@ -18,7 +18,6 @@
 
 #include <inttypes.h>
 #include <openssl/sha.h>
-#include <cstdint>
 
 #include "cppbor_parse.h"
 
@@ -133,8 +132,9 @@ bool prettyPrintInternal(const Item* item, string& out, size_t indent, size_t ma
                 const ViewBstr* viewBstr = item->asViewBstr();
                 assert(viewBstr != nullptr);
 
-                valueData = viewBstr->view().data();
-                valueSize = viewBstr->view().size();
+                std::basic_string_view view = viewBstr->view();
+                valueData = view.data();
+                valueSize = view.size();
             }
 
             if (valueSize > maxBStrSize) {
